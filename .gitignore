@@ -1,3 +1,4 @@
-.venv/
+../.venv/
 .idea/
-backend/config/settings.py
+config/settings.py
+*node_modules
