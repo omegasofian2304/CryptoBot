@@ -1,135 +1,106 @@
-# Crypto Alert Bot
+# Crypto Market Analysis Tool
 
-A Python bot that monitors Bitcoin price data and sends Telegram alerts
-when trading opportunities are detected based on technical analysis.
+A Python-based market analysis tool that monitors Bitcoin price data and generates
+trading signals based on Dow Theory principles, enhanced with a machine learning
+layer to filter noise and improve signal reliability.
 
-This project was built for learning purposes and focuses on clean
-architecture, modular design, and integration with external services
-such as the Binance API, MySQL databases, and Telegram notifications.
+This project is built for learning purposes and focuses on clean architecture,
+modular design, and progressive integration of real trading knowledge. The strategy
+is grounded in Dow Theory, progressively codified into an algorithm and enhanced
+with a machine learning layer to improve signal reliability.
 
-The goal is to progressively implement real trading knowledge into the
-bot over time — starting with basic price alerts and evolving toward
-a full algorithmic trading assistant capable of detecting technical
-setups (support/resistance, Fibonacci retracements, candlestick
-patterns) and suggesting entry points with TP and SL levels.
+The tool is designed as a market analysis assistant, not an automated trading bot.
+Signals are surfaced to the user via a real-time dashboard for manual decision-making,
+preserving full control over execution.
 
-------------------------------------------------------------------------
+This project is developed in collaboration with a friend who is learning frontend
+development, making it a dual-purpose project: building a serious market analysis
+tool while providing a real-world context for learning Vue.js and modern UI development.
 
-## Current Features
+It is also part of a broader personal journey toward quantitative finance and ML
+engineering, with the goal of deeply understanding how algorithmic strategies are
+designed, validated, and deployed in production environments.
 
-- Fetch Bitcoin OHLCV data from the Binance API
-- Store price history in a MySQL database
-- Analyze price movements and detect basic signals
-- Send Telegram alerts when thresholds are exceeded
-- Modular and extensible project structure
+## Architecture
 
-------------------------------------------------------------------------
+The first version of this project is intentionally built as a monolithic Python
+application to keep the initial scope manageable and focused on the core logic.
+As the project matures, the architecture will progressively evolve toward a
+microservices design, with each component running in its own Docker container
+and communicating via Redis pub/sub. This transition will also serve as a
+hands-on introduction to distributed systems concepts.
 
-## Planned Implementations (Progressive Roadmap)
+Additionally, performance-critical components such as the Dow Theory signal engine
+may be progressively rewritten in C++ to explore low-latency optimisation techniques,
+reflecting the kind of architecture used in real quantitative trading systems.
 
-The bot will evolve as my trading knowledge deepens. Here is the
-planned roadmap:
-
-**Phase 1 — Basic Alerts (current)**
-- Fetch BTC/USDT price in real time
-- Detect significant price movements
-- Send Telegram alerts with price and % change
-
-**Phase 2 — Technical Analysis**
-- Implement RSI and moving averages (MA20, MA50)
-- Detect overbought / oversold conditions
-- Add candlestick pattern recognition (hammer, engulfing, doji)
-
-**Phase 3 — Support & Resistance + Fibonacci**
-- Automatically detect key support and resistance levels
-- Calculate Fibonacci retracement levels (0.382, 0.5, 0.618)
-- Alert when price enters the golden pocket zone (0.382–0.618)
-
-**Phase 4 — Entry Point Detection**
-- Combine confluence signals (support + Fibonacci + candle confirmation)
-- Suggest entry price, TP and SL levels via Telegram
-- Include Risk/Reward ratio in the alert
-
-**Phase 5 — Dashboard & Backtesting**
-- Web dashboard (Vue.js) to visualize signals and history
-- Backtesting engine to validate strategy on historical data
-- Performance tracking (win rate, average R:R, P&L)
-
-------------------------------------------------------------------------
+```
+Data Service  ->  Strategy Service  ->  ML Service
+(Binance API)     (Dow Theory)          (Signal filter)
+                                               |
+                                           API Service
+                                           (FastAPI)
+                                               |
+                                        Dashboard (Vue.js)
+                                        + Telegram Alerts
+```
 
 ## Module Description
 
-**config/** - Global configuration settings (API keys, thresholds)
+**data_service/** - Binance API integration, OHLCV fetching
 
-**services/** - External service integrations
-- Binance API communication
-- Telegram messaging
-- Database interaction
+**strategy_service/** - Dow Theory implementation, pivot detection,
+support/resistance identification, signal generation
 
-**core/** - Business logic of the bot
-- Market data analysis
-- Alert triggering logic
+**ml_service/** - Dataset management, model training, signal confidence scoring
 
-**models/** - Data structures used by the application
+**api_service/** - FastAPI endpoints exposing signals and history to the frontend
 
-**utils/** - Utility functions such as logging
+**dashboard/** - Vue.js + Tailwind real-time interface
 
-**main.py** - Entry point — orchestrates the entire bot workflow
-
-------------------------------------------------------------------------
+**shared/** - Shared data models, utilities and configuration
 
 ## Installation
 
 ### 1. Clone the repository
-
 ```bash
 git clone <repo>
-cd crypto-alert-bot
+cd crypto-analysis-tool
 ```
 
 ### 2. Install dependencies
-
 ```bash
 pip install -r requirements.txt
 ```
 
-------------------------------------------------------------------------
-
-## Configuration
-
-Edit the file `config/settings.py`:
-
-```python
-TELEGRAM_TOKEN = "your_bot_token"
-CHAT_ID        = "your_chat_id"
-
-SYMBOL           = "BTCUSDT"
-INTERVAL         = "1h"
-CHECK_INTERVAL   = 300
-
-VOLATILITY_THRESHOLD = 5
-```
-
-------------------------------------------------------------------------
-
-## Running the Bot
-
+### 3. Run locally
 ```bash
 python main.py
 ```
 
-The bot will:
-1. Fetch BTC candlestick data from Binance
-2. Store the data in MySQL
-3. Analyze price movements and technical signals
-4. Send a Telegram alert when a setup is detected
+## Configuration
 
-------------------------------------------------------------------------
+Edit `shared/config.py`:
+
+```python
+BINANCE_API_KEY    = "your_api_key"
+BINANCE_API_SECRET = "your_api_secret"
+TELEGRAM_TOKEN     = "your_bot_token"
+CHAT_ID            = "your_chat_id"
+SYMBOL             = "BTCUSDT"
+INTERVAL           = "1h"
+SIGNAL_THRESHOLD   = 0.70
+```
 
 ## Tech Stack
 
-- **Python** — core logic
-- **Binance API** — market data (OHLCV candles)
-- **MySQL** — price history storage
-- **Telegram Bot API** — real-time alerts
-- **Vue.js** *(planned)* — web dashboard
+- **Python** - core logic, data processing, ML
+- **Binance API (CCXT)** - market data (OHLCV candles)
+- **Redis** - inter-service messaging and caching (planned)
+- **MySQL** - price history and signal storage
+- **scikit-learn** - ML signal filtering
+- **FastAPI** - internal API layer
+- **Vue.js + Tailwind** - real-time dashboard
+- **Docker + Docker Compose** - containerisation and orchestration (planned)
+- **C++** - performance-critical components (planned)
+- **Telegram Bot API** - real-time signal alerts
