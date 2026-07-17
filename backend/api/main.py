@@ -34,3 +34,32 @@ def candles(symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 100):
         raise HTTPException(status_code=400, detail="Please enter valid symbol")
 
     return candle_fetch
+
+
+@app.get("/trend")
+def trend(symbol: str, interval: str = "1h", limit: int = 1000):
+    try:
+        if interval not in VALID_INTERVALS:
+            raise HTTPException(status_code=400, detail=f"Invalid interval. Accepted values : {VALID_INTERVALS}")
+
+        if limit > 1000000:
+            raise HTTPException(status_code=400, detail="Limit must be less than 1 million")
+
+        if limit < 5:
+            raise HTTPException(status_code=400, detail="Limit must be more than 5")
+
+        candles_fetch = get_candles(symbol, interval, limit)
+
+        if len(candles_fetch) == 0:
+            raise HTTPException(status_code=422, detail="Problem with binance api")
+
+    except ConnectionError:
+        raise HTTPException(status_code=500, detail="Server error")
+
+    except requests.exceptions.HTTPError:
+        raise HTTPException(status_code=400, detail="Please enter valid symbol")
+
+    score_short_term = get_trend(candles_fetch, window=6)
+    score_long_term = get_trend(candles_fetch)
+
+    return {"short_term": score_short_term, "long_term": score_long_term}
