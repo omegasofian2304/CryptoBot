@@ -12,8 +12,6 @@ Help :
 """
 from backend.services.binance_api import get_candles
 
-candles = get_candles("BTCUSDT", "1h", 1000)
-
 def calculate_ema(prices, n):
     k = 2 / (n+1)
     ema = [prices[0]]
@@ -72,9 +70,11 @@ def get_trend(candles_dow, window=None):
     lows_score = trend_score(lows)
     return (highs_score + lows_score) / 2
 
+def test():
+    candles = get_candles("BTCUSDT", "1h", 1000)
 
-score_long_term = get_trend(candles)
-score_short_term = get_trend(candles, window=6)
+    score_long_term = get_trend(candles)
+    score_short_term = get_trend(candles, window=6)
 
-print("Long term :", check_score(score_long_term), "Score : ", score_long_term)
-print("Short term :", check_score(score_short_term), "Score : ", score_short_term)
+    print("Long term :", check_score(score_long_term), "Score : ", score_long_term)
+    print("Short term :", check_score(score_short_term), "Score : ", score_short_term)
