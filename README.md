@@ -1,64 +1,71 @@
 # Crypto Market Analysis Tool
 
-A Python-based market analysis tool that monitors Bitcoin price data and generates
-trading signals based on Dow Theory principles, enhanced with a machine learning
-layer to filter noise and improve signal reliability.
+A market analysis tool that monitors Bitcoin price data and generates trading
+signals based on Dow Theory principles, enhanced with an EMA smoothing layer
+and, eventually, a machine learning layer to filter noise and improve signal
+reliability.
 
 This project is built for learning purposes and focuses on clean architecture,
-modular design, and progressive integration of real trading knowledge. The strategy
-is grounded in Dow Theory, progressively codified into an algorithm and enhanced
-with a machine learning layer to improve signal reliability.
+modular design, and progressive integration of real trading knowledge. The
+strategy is grounded in Dow Theory, codified into an algorithm using EMA-based
+pivot smoothing, with both a short-term and long-term trend score computed
+from the same dataset.
 
-The tool is designed as a market analysis assistant, not an automated trading bot.
-Signals are surfaced to the user via a real-time dashboard for manual decision-making,
-preserving full control over execution.
+The tool is designed as a market analysis assistant, not an automated trading
+bot. Signals are surfaced to the user via a real-time dashboard for manual
+decision-making, preserving full control over execution.
 
-This project is developed in collaboration with a friend who is learning frontend
-development, making it a dual-purpose project: building a serious market analysis
-tool while providing a real-world context for learning Vue.js and modern UI development.
+This project is developed in collaboration with a friend who is learning
+frontend development, making it a dual-purpose project: building a serious
+market analysis tool while providing a real-world context for learning React
+and modern UI development.
 
-It is also part of a broader personal journey toward quantitative finance and ML
-engineering, with the goal of deeply understanding how algorithmic strategies are
-designed, validated, and deployed in production environments.
+It is also part of a broader personal journey toward quantitative finance and
+ML engineering, with the goal of deeply understanding how algorithmic
+strategies are designed, validated, and deployed in production environments.
 
 ## Architecture
 
-The first version of this project is intentionally built as a monolithic Python
-application to keep the initial scope manageable and focused on the core logic.
-As the project matures, the architecture will progressively evolve toward a
-microservices design, with each component running in its own Docker container
-and communicating via Redis pub/sub. This transition will also serve as a
-hands-on introduction to distributed systems concepts.
-
-Additionally, performance-critical components such as the Dow Theory signal engine
-may be progressively rewritten in C++ to explore low-latency optimisation techniques,
-reflecting the kind of architecture used in real quantitative trading systems.
+The first version of this project is intentionally built as a monolithic
+Python backend (FastAPI) to keep the initial scope manageable and focused on
+the core logic. The project is now evolving toward a microservices design:
+the Dow Theory signal engine is being rewritten in C++ for performance and
+run as its own service, separate from the Python service handling data
+fetching and the API layer. Communication between the two will be handled
+through Redis pub/sub, which will also serve as a hands-on introduction to
+distributed systems concepts.
 
 ```
-Data Service  ->  Strategy Service  ->  ML Service
-(Binance API)     (Dow Theory)          (Signal filter)
-                                               |
-                                           API Service
-                                           (FastAPI)
-                                               |
-                                        Dashboard (Vue.js)
-                                        + Telegram Alerts
-```
+Python Service          C++ Service
+(Binance API,            (Dow Theory engine:
+ FastAPI /candles,        EMA smoothing,
+ FastAPI /trend)          swing detection,
+                          trend scoring)
+       |                        |
+       ------ Redis pub/sub -----
+                 |
+          React Dashboard
+
+## Current State
+
+- `binance_api.py` - fetches OHLCV candles from Binance
+- `analyzer.py` - Dow Theory engine: EMA smoothing, swing high/low detection,
+  short-term and long-term trend scoring
+- `main.py` (FastAPI) - exposes `/candles` and `/trend` endpoints, with input
+  validation and error handling
+- C++ port of the Dow Theory engine in progress
+- React frontend scaffolding in progress
 
 ## Module Description
 
-**data_service/** - Binance API integration, OHLCV fetching
+**backend/** - Python service: Binance API integration, OHLCV fetching, and
+the FastAPI layer exposing `/candles` and `/trend` to the frontend
 
-**strategy_service/** - Dow Theory implementation, pivot detection,
-support/resistance identification, signal generation
+**analysis_cpp/** - C++ microservice progressively taking over the Dow Theory
+engine (EMA smoothing, swing detection, short/long-term trend scoring) for
+performance
 
-**ml_service/** - Dataset management, model training, signal confidence scoring
-
-**api_service/** - FastAPI endpoints exposing signals and history to the frontend
-
-**dashboard/** - Vue.js + Tailwind real-time interface
-
-**shared/** - Shared data models, utilities and configuration
+**frontend/** - React real-time interface
 
 ## Installation
 
@@ -68,19 +75,42 @@ git clone <repo>
 cd crypto-analysis-tool
 ```
 
-### 2. Install dependencies
+### 2. Backend - install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run locally
+### 3. Backend - run locally
 ```bash
-python main.py
+uvicorn backend.api.main:app --reload
+```
+
+### 4. Frontend - install dependencies
+```bash
+cd frontend
+npm install
+```
+
+### 5. Frontend - run locally
+```bash
+npm run dev
+```
+
+## API Endpoints
+
+**GET /candles** - returns raw OHLCV candles
+```
+/candles?symbol=BTCUSDT&interval=1h&limit=100
+```
+
+**GET /trend** - returns short-term and long-term Dow Theory trend scores
+```
+/trend?symbol=BTCUSDT&interval=1h&limit=1000
 ```
 
 ## Configuration
 
-Edit `shared/config.py`:
+Edit `config/settings.py`:
 
 ```python
 BINANCE_API_KEY    = "your_api_key"
@@ -95,12 +125,12 @@ SIGNAL_THRESHOLD   = 0.70
 ## Tech Stack
 
 - **Python** - core logic, data processing, ML
-- **Binance API (CCXT)** - market data (OHLCV candles)
-- **Redis** - inter-service messaging and caching (planned)
-- **MySQL** - price history and signal storage
-- **scikit-learn** - ML signal filtering
+- **C++** - performance-critical Dow Theory engine (in progress)
+- **Binance API** - market data (OHLCV candles)
 - **FastAPI** - internal API layer
-- **Vue.js + Tailwind** - real-time dashboard
+- **React + Tailwind** - real-time dashboard
+- **Redis** - inter-service messaging and caching (planned)
+- **MySQL** - price history and signal storage (planned)
+- **scikit-learn** - ML signal filtering (planned)
 - **Docker + Docker Compose** - containerisation and orchestration (planned)
-- **C++** - performance-critical components (planned)
-- **Telegram Bot API** - real-time signal alerts
+- **Telegram Bot API** - real-time signal alerts (planned)
