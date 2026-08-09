@@ -52,7 +52,7 @@ def check_score(score_dow):
 
 def trend_score(points):
     if len(points) < 2:
-        return 0
+        return 0.5
     up = sum(1 for i in range(1, len(points)) if points[i] > points[i-1])
     total = len(points) - 1
     return up / total
