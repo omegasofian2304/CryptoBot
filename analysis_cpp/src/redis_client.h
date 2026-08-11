@@ -2,7 +2,9 @@
 
 #include <string>
 #include <hiredis/hiredis.h>
+#include <nlohmann/json.hpp>
 
 redisContext* connect_redis();
-std::pair<std::string, std::string> subscribe_and_listen(redisContext* c, std::string channel);
-void publish_trend(redisContext* c, std::string symbol, double score);
+void psubscribe(redisContext* c, std::string pattern);
+std::pair<std::string, std::string> listen_next(redisContext* c);
+void publish_trend(redisContext* c, std::string symbol, nlohmann::json score);
