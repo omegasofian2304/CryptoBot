@@ -5,9 +5,10 @@ Project : CryptoBot
 Desc : Create the api
 """
 import requests
+import redis
 from fastapi import FastAPI, HTTPException
 
-from backend.core.analyzer import get_trend
+from backend.services.redis_publisher import publish
 from backend.services.binance_api import get_candles
 
 app = FastAPI()
@@ -53,13 +54,16 @@ def trend(symbol: str, interval: str = "1h", limit: int = 1000):
         if len(candles_fetch) == 0:
             raise HTTPException(status_code=422, detail="Problem with binance api")
 
+        publish(candles_fetch, symbol)
+
+
+    except redis.exceptions.ConnectionError:
+        raise HTTPException(status_code=500, detail="Redis is down")
+
     except ConnectionError:
         raise HTTPException(status_code=500, detail="Server error")
 
     except requests.exceptions.HTTPError:
         raise HTTPException(status_code=400, detail="Please enter valid symbol")
 
-    score_short_term = get_trend(candles_fetch, window=6)
-    score_long_term = get_trend(candles_fetch)
-
-    return {"short_term": score_short_term, "long_term": score_long_term}
+    return {"status": "published", "symbol": symbol, "candles_count": len(candles_fetch)}
