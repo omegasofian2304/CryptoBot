@@ -6,7 +6,9 @@ project(AnalysisCpp)
 
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(hiredis CONFIG REQUIRED)
 
 add_executable(analysis_cpp src/main.cpp "src/candle.h" "src/dow_theory.h" "src/dow_theory.cpp" "src/redis_client.h" "src/redis_client.cpp")
-target_link_libraries(analysis_cpp PRIVATE hiredis::hiredis)
+target_link_libraries(analysis_cpp PRIVATE hiredis::hiredis nlohmann_json::nlohmann_json)
+

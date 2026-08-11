@@ -18,8 +18,8 @@ redisContext* connect_redis() {
     return c;
 }
 
-std::string subscribe_and_listen(redisContext* c, std::string channel) {
-    std::string subscribe_channel = "SUBSCRIBE " + channel;
+std::pair<std::string, std::string> subscribe_and_listen(redisContext* c, std::string channel) {
+    std::string subscribe_channel = "PSUBSCRIBE " + channel;
     redisReply* reply = (redisReply*)redisCommand(c, subscribe_channel.c_str());
     freeReplyObject(reply);
 
@@ -27,21 +27,20 @@ std::string subscribe_and_listen(redisContext* c, std::string channel) {
     while (true) {
         redisReply* message;
         if (redisGetReply(c, (void**)&message) != REDIS_OK) {
-            return "";
+            eturn std::make_pair("", "");
         }
 
         // pub/sub messages are 3-element arrays: ["message", channel, content]
-        if (message->type == REDIS_REPLY_ARRAY && message->elements == 3) {
-            std::string content = message->element[2]->str;
+        if (message->type == REDIS_REPLY_ARRAY && message->elements == 4) {
+            std::string exact_channel = message->element[2]->str;
+            std::string content = message->element[3]->str;
             freeReplyObject(message);
-            return content;
+            return std::make_pair(exact_channel, content);
         }
 
         freeReplyObject(message);
     }
 }
-
-
 
 void publish_trend(redisContext* c, std::string symbol, double score) {
     std::string message = std::to_string(score);
