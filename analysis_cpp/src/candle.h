@@ -1,3 +1,5 @@
+#pragma once
+
 struct Candle {
     double open;
     double high;

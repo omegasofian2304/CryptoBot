@@ -2,7 +2,6 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include "candle.h"
 #include "dow_theory.h"
 
 std::vector<double> calculate_ema(std::vector<double> prices, int n) {

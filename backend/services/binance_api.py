@@ -6,7 +6,6 @@ Desc : API data fetching script
 """
 import requests
 
-
 def get_candles(symbol, interval, limit):
     """
     Fetch candlestick data from Binance API
