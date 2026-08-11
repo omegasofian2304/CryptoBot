@@ -1,6 +1,7 @@
 #include "redis_client.h"
 #include <hiredis/hiredis.h>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 redisContext* connect_redis() {
     redisContext* c = redisConnect("127.0.0.1", 6379);

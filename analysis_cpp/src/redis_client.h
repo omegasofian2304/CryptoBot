@@ -3,6 +3,7 @@
 #include <string>
 #include <hiredis/hiredis.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 redisContext* connect_redis();
 void psubscribe(redisContext* c, std::string pattern);
