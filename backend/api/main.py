@@ -8,6 +8,7 @@ import requests
 import redis
 from fastapi import FastAPI, HTTPException
 
+from backend.services.redis_subscribe import wait_for_trend, subscribe_setup
 from backend.services.redis_publisher import publish
 from backend.services.binance_api import get_candles
 
@@ -54,8 +55,11 @@ def trend(symbol: str, interval: str = "1h", limit: int = 1000):
         if len(candles_fetch) == 0:
             raise HTTPException(status_code=422, detail="Problem with binance api")
 
+        pubsub = subscribe_setup(symbol)
+
         publish(candles_fetch, symbol)
 
+        result = wait_for_trend(pubsub)
 
     except redis.exceptions.ConnectionError:
         raise HTTPException(status_code=500, detail="Redis is down")
@@ -66,4 +70,4 @@ def trend(symbol: str, interval: str = "1h", limit: int = 1000):
     except requests.exceptions.HTTPError:
         raise HTTPException(status_code=400, detail="Please enter valid symbol")
 
-    return {"status": "published", "symbol": symbol, "candles_count": len(candles_fetch)}
+    return result
