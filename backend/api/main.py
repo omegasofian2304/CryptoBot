@@ -8,9 +8,9 @@ import requests
 import redis
 from fastapi import FastAPI, HTTPException
 
-from backend.services.redis_subscribe import wait_for_trend, subscribe_setup
-from backend.services.redis_publisher import publish
-from backend.services.binance_api import get_candles
+from services.redis_subscribe import wait_for_trend, subscribe_setup
+from services.redis_publisher import publish
+from services.binance_api import get_candles
 
 app = FastAPI()
 
