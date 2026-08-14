@@ -64,18 +64,6 @@ std::vector<double> get_swings(std::vector<Candle> candles_dow, std::string fiel
     return swing_value;
 }
 
-std::string check_score(double score_dow) {
-    if (score_dow >= 0.6) {
-        return "bullish";
-    }
-    else if (score_dow <= 0.4) {
-        return "bearish";
-    }
-    else {
-        return "unstable";
-    }
-}
-
 double trend_score(std::vector<double> points) {
     const int total = points.size() - 1;
     double up = 0;
