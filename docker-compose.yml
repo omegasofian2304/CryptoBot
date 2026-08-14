@@ -1,0 +1,18 @@
+# Orchestrates the three services: Redis, Python backend, C++ analysis service.
+# All services run on the same Docker network and can reach each other by name.
+services:
+
+  redis:
+    image: redis:7
+
+  backend:
+    build: ./backend
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+
+  analysis:
+    build: ./analysis_cpp
+    depends_on:
+      - redis

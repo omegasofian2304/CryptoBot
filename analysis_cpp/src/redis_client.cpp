@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 
 redisContext* connect_redis() {
-    redisContext* c = redisConnect("127.0.0.1", 6379);
+    redisContext* c = redisConnect("redis", 6379);
 
     if (c == nullptr || c->err) {
         if (c) {
