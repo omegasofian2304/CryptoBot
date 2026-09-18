@@ -1,4 +1,7 @@
 requests
+python-dotenv
+fastapi
+uvicorn
 python-telegram-bot
 mysql-connector-python
-python-dotenv
+redis

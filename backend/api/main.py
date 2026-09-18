@@ -1,0 +1,73 @@
+"""
+Author : Sofian Hussein
+Date : 16.07.2026
+Project : CryptoBot
+Desc : Create the api
+"""
+import requests
+import redis
+from fastapi import FastAPI, HTTPException
+
+from services.redis_subscribe import wait_for_trend, subscribe_setup
+from services.redis_publisher import publish
+from services.binance_api import get_candles
+
+app = FastAPI()
+
+VALID_INTERVALS = ["1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d", "1w", "1M"]
+
+@app.get("/candles")
+def candles(symbol: str = "BTCUSDT", interval: str = "1h", limit: int = 100):
+    try:
+        if interval not in VALID_INTERVALS:
+            raise HTTPException(status_code=400, detail=f"Invalid interval. Accepted values : {VALID_INTERVALS}")
+
+        if limit > 1000000:
+            raise HTTPException(status_code=400, detail="Limit must be under 1 million")
+
+        if limit < 5:
+            raise HTTPException(status_code=400, detail="Limit must be more than 5")
+
+        candle_fetch = get_candles(symbol, interval, limit)
+    except ConnectionError:
+        raise HTTPException(status_code=500, detail="Server error")
+
+    except requests.exceptions.HTTPError:
+        raise HTTPException(status_code=400, detail="Please enter valid symbol")
+
+    return candle_fetch
+
+
+@app.get("/trend")
+def trend(symbol: str, interval: str = "1h", limit: int = 1000):
+    try:
+        if interval not in VALID_INTERVALS:
+            raise HTTPException(status_code=400, detail=f"Invalid interval. Accepted values : {VALID_INTERVALS}")
+
+        if limit > 1000000:
+            raise HTTPException(status_code=400, detail="Limit must be less than 1 million")
+
+        if limit < 5:
+            raise HTTPException(status_code=400, detail="Limit must be more than 5")
+
+        candles_fetch = get_candles(symbol, interval, limit)
+
+        if len(candles_fetch) == 0:
+            raise HTTPException(status_code=422, detail="Problem with binance api")
+
+        pubsub = subscribe_setup(symbol)
+
+        publish(candles_fetch, symbol)
+
+        result = wait_for_trend(pubsub)
+
+    except redis.exceptions.ConnectionError:
+        raise HTTPException(status_code=500, detail="Redis is down")
+
+    except ConnectionError:
+        raise HTTPException(status_code=500, detail="Server error")
+
+    except requests.exceptions.HTTPError:
+        raise HTTPException(status_code=400, detail="Please enter valid symbol")
+
+    return result
